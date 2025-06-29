@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative h-96 bg-cover bg-center" style="background-image: url('https://via.placeholder.com/1920x1080');">
+    <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center">
+        <div class="container mx-auto px-4">
+            <h1 class="text-5xl font-bold mb-4">Welcome to FiewFilm</h1>
+            <p class="text-xl mb-6 max-w-2xl">Discover, review, and discuss your favorite films with our community of movie lovers.</p>
+            <a href="{{ url_for('search_films') }}" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg font-semibold">
+                Explore Films
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Popular Films Section -->
+<div class="container mx-auto px-4 py-12">
+    <h2 class="text-3xl font-bold mb-6">Popular Films</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {% for film in popular_films %}
+        <a href="{{ url_for('film_detail', film_id=film._id) }}" class="film-card group">
+            <div class="relative overflow-hidden rounded-lg">
+                <img src="{{ film.poster_url or 'https://via.placeholder.com/300x450' }}" alt="{{ film.title }}" class="w-full h-64 object-cover">
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div class="text-center p-4">
+                        <h3 class="text-white font-bold text-lg">{{ film.title }}</h3>
+                        <div class="flex items-center justify-center mt-2">
+                            <span class="rating-circle {% if film.average_rating >= 3.5 %}fresh{% else %}rotten{% endif %}">
+                                {{ "%.1f"|format(film.average_rating) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- New Releases Section -->
+<div class="container mx-auto px-4 py-12">
+    <h2 class="text-3xl font-bold mb-6">New Releases</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {% for film in new_films %}
+        <a href="{{ url_for('film_detail', film_id=film._id) }}" class="film-card group">
+            <div class="relative overflow-hidden rounded-lg">
+                <img src="{{ film.poster_url or 'https://via.placeholder.com/300x450' }}" alt="{{ film.title }}" class="w-full h-64 object-cover">
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div class="text-center p-4">
+                        <h3 class="text-white font-bold text-lg">{{ film.title }}</h3>
+                        <div class="flex items-center justify-center mt-2">
+                            <span class="rating-circle {% if film.average_rating >= 3.5 %}fresh{% else %}rotten{% endif %}">
+                                {{ "%.1f"|format(film.average_rating) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Featured Articles Section -->
+{% if featured_articles %}
+<div class="container mx-auto px-4 py-12">
+    <h2 class="text-3xl font-bold mb-6">Featured Articles</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for article in featured_articles %}
+        <a href="{{ url_for('article_detail', article_id=article._id) }}" class="bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-48 overflow-hidden">
+<img src="{{ url_for('static', filename='images/' ~ article.featured_image) if article.featured_image else 'https://via.placeholder.com/600x400' }}" 
+     alt="{{ article.title }}" 
+     class="w-full h-full object-cover">
+            </div>
+            <div class="p-4">
+                <h3 class="text-xl font-bold mb-2">{{ article.title }}</h3>
+                <p class="text-gray-400 text-sm">{{ article.created_at.strftime('%B %d, %Y') }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

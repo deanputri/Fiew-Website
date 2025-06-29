@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Admin Dashboard</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Stats Card 1 -->
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-600 mr-4">
+                    <i class="fas fa-film text-white"></i>
+                </div>
+                <div>
+                    <p class="text-gray-400">Total Films</p>
+                    <h3 class="text-2xl font-bold text-white">{{ film_count }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Card 2 -->
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-600 mr-4">
+                    <i class="fas fa-users text-white"></i>
+                </div>
+                <div>
+                    <p class="text-gray-400">Total Users</p>
+                    <h3 class="text-2xl font-bold text-white">{{ user_count }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Card 3 -->
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-600 mr-4">
+                    <i class="fas fa-flag text-white"></i>
+                </div>
+                <div>
+                    <p class="text-gray-400">Reported Reviews</p>
+                    <h3 class="text-2xl font-bold text-white">{{ report_count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Recent Articles -->
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Recent Articles</h2>
+            <div class="space-y-4">
+                {% for article in recent_articles %}
+                <div class="border-b border-gray-700 pb-4">
+                    <h3 class="font-semibold text-white">{{ article.title }}</h3>
+                    <p class="text-sm text-gray-400">
+                        {{ article.created_at.strftime('%B %d, %Y') }} • 
+                        {{ article.views }} views
+                    </p>
+                </div>
+                {% endfor %}
+                <a href="{{ url_for('admin_articles') }}" class="text-blue-500 hover:text-blue-400 inline-block mt-2">
+                    View all articles <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Reported Reviews -->
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Recent Reports</h2>
+            <div class="space-y-4">
+                {% for report in recent_reports %}
+                <div class="border-b border-gray-700 pb-4">
+                    <div class="flex justify-between">
+                        <h3 class="font-semibold text-white">
+                            {% if report.film_title %}
+                                Review on: {{ report.film_title }}
+                            {% else %}
+                                [Deleted Review]
+                            {% endif %}
+                        </h3>
+                        <span class="text-xs bg-red-600 text-white px-2 py-1 rounded">Pending</span>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        Reported by: {{ report.reporter_username }} • 
+                        {{ report.created_at.strftime('%B %d, %Y') }}
+                    </p>
+                </div>
+                {% endfor %}
+                <a href="{{ url_for('admin_reported_reviews') }}" class="text-blue-500 hover:text-blue-400 inline-block mt-2">
+                    View all reports <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Followers - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Profile Header -->
+    <div class="flex items-center space-x-4 mb-8">
+        <div class="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center text-white text-3xl">
+            {% if user.profile_pic %}
+                <img src="{{ url_for('static', filename='images/' + user.profile_pic) }}" class="w-32 h-32 rounded-full object-cover">
+            {% else %}
+                <i class="fas fa-user"></i>
+            {% endif %}
+        </div>
+        <div>
+            <h2 class="text-3xl font-bold">{{ user.username }}</h2>
+            <p class="text-gray-400">{{ user.bio if user.bio else 'No bio available' }}</p>
+        </div>
+    </div>
+
+    <!-- Followers List -->
+    <div>
+        <h3 class="text-2xl font-bold mb-4">{{ user.username }}'s Followers</h3>
+        {% if followers %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for follower in followers %}
+            <div class="bg-gray-800 p-4 rounded-lg flex items-center">
+                <div class="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-white">
+                    {% if follower.profile_pic %}
+                        <img src="{{ url_for('static', filename='images/' + follower.profile_pic) }}" class="w-12 h-12 rounded-full object-cover">
+                    {% else %}
+                        <i class="fas fa-user"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-4">
+                    <p class="font-semibold">{{ follower.username }}</p>
+                    <p class="text-sm text-gray-400">{{ follower.bio if follower.bio else 'No bio available' }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-gray-800 p-8 text-center">
+            <i class="fas fa-users text-4xl text-gray-600 mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">No followers yet</h3>
+            <p class="text-gray-400">This user has not gained any followers yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

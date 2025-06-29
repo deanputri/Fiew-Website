@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiewFilm - {% block title %}{% endblock %}</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+       
+        .netflix-bg {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%);
+        }
+        .film-card:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+        .rating-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .fresh {
+            background-color: #f83600;
+            color: white;
+        }
+        .rotten {
+            background-color: #f5f5f5;
+            color: black;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Netflix-style navbar -->
+    <nav class="netflix-bg fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="flex items-center">
+                <span class="text-red-600 font-bold text-2xl">FiewFilm</span>
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="{{ url_for('index') }}" class="hover:text-red-500">Home</a>
+                <a href="{{ url_for('search_films') }}" class="hover:text-red-500">Search</a>
+<a href="{{ url_for('for_your_page') }}" class="hover:text-red-500">For Your Page</a>
+
+
+{% if is_logged_in() %}
+    <a href="{{ url_for('user_profile', username=current_user.username) }}" class="flex items-center space-x-2">
+        {% if current_user.profile_pic %}
+            <img src="{{ url_for('static', filename='images/' + current_user.profile_pic) }}" 
+                 class="w-8 h-8 rounded-full" alt="Profile">
+        {% else %}
+            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                <i class="fas fa-user"></i>
+            </div>
+        {% endif %}
+        <span>{{ current_user.username }}</span>
+    </a>
+
+                    <a href="{{ url_for('logout') }}" class="hover:text-red-500">Logout</a>
+                    
+                    {% if is_admin() %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="bg-red-600 px-3 py-1 rounded hover:bg-red-700">
+                            Admin
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="hover:text-red-500">Login</a>
+                    <a href="{{ url_for('register') }}" class="bg-red-600 px-3 py-1 rounded hover:bg-red-700">
+                        Sign Up
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="pt-20 pb-10">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mx-auto px-4">
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded {% if category == 'error' %}bg-red-500{% elif category == 'success' %}bg-green-500{% else %}bg-blue-500{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <span class="text-red-600 font-bold text-2xl">FiewFilm</span>
+                    <p class="text-gray-400 mt-2">Your ultimate film review platform</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-400">&copy; 2023 FiewFilm. All rights reserved.</p>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <a href="#" class="text-gray-400 hover:text-white">Terms of Service</a>
+                    <a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a>
+                    <a href="#" class="text-gray-400 hover:text-white">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Like/Dislike functionality
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const reviewId = this.dataset.reviewId;
+                const response = await fetch(`/review/${reviewId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const likeCount = this.querySelector('.like-count');
+                    likeCount.textContent = parseInt(likeCount.textContent) + 1;
+                }
+            });
+        });
+
+        document.querySelectorAll('.dislike-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const reviewId = this.dataset.reviewId;
+                const response = await fetch(`/review/${reviewId}/dislike`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const dislikeCount = this.querySelector('.dislike-count');
+                    dislikeCount.textContent = parseInt(dislikeCount.textContent) + 1;
+                }
+            });
+        });
+
+        // Follow functionality
+        document.querySelectorAll('.follow-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const userId = this.dataset.userId;
+                const response = await fetch(`/follow/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    if (data.action === 'follow') {
+                        this.textContent = 'Following';
+                        this.classList.remove('bg-gray-700');
+                        this.classList.add('bg-red-600');
+                    } else {
+                        this.textContent = 'Follow';
+                        this.classList.remove('bg-red-600');
+                        this.classList.add('bg-gray-700');
+                    }
+                }
+            });
+        });
+
+        // Report review
+        document.querySelectorAll('.report-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const reviewId = this.dataset.reviewId;
+                const reason = prompt("Reason for reporting (contains spoiler):", "Contains spoiler");
+                
+                if (reason !== null) {
+                    const response = await fetch(`/review/${reviewId}/report`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `reason=${encodeURIComponent(reason)}`
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Review reported successfully. Admin will review it shortly.');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

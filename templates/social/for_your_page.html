@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}For Your Page{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8 bg-[#0f0f0f] text-white min-h-screen">
+
+    <!-- Trending Section -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-5 text-[#dc2626] border-b border-[#252525] pb-2">Trending Now</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
+            {% for film in trending_films %}
+            <div class="flex-shrink-0 w-36">
+                <img src="{{ film.poster_url or url_for('static', filename='images/default.jpg') }}"
+                     alt="{{ film.title }}"
+                     class="w-full h-48 object-cover rounded-lg shadow-lg hover:scale-105 transition duration-300">
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Highlighted Film -->
+    {% if highlighted_film %}
+    <section class="mb-12 bg-[#1a1a1a] rounded-xl p-6 shadow-lg">
+        <div class="flex flex-col items-center text-center">
+            <img src="{{ highlighted_film.poster_url }}"
+                 class="w-48 rounded-lg shadow-xl mb-4" 
+                 alt="{{ highlighted_film.title }}">
+            <h1 class="text-2xl font-bold mb-2">{{ highlighted_film.title }} S1</h1>
+<div class="inline-flex items-center bg-[#dc2626] text-white px-3 py-1 rounded space-x-2 mb-3">
+    <span class="text-sm font-semibold">{{ highlighted_film.average_rating | round(1) }}</span>
+    <div class="flex items-center space-x-[1px]">
+        {% set full_popcorns = (highlighted_film.average_rating // 1)|int %}
+        {% set empty_popcorns = 10 - full_popcorns %}
+        {% for i in range(full_popcorns) %}
+        <img src="{{ url_for('static', filename='images/popcorn_full.png') }}" alt="popcorn"
+             class="w-5 h-5 sm:w-6 sm:h-6">
+        {% endfor %}
+        {% for i in range(empty_popcorns) %}
+        <img src="{{ url_for('static', filename='images/popcorn_empty.png') }}" alt="empty"
+             class="w-5 h-5 sm:w-6 sm:h-6 opacity-30">
+        {% endfor %}
+    </div>
+</div>
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                {% for genre in highlighted_film.genres %}
+                <span class="bg-[#252525] text-xs px-3 py-1 rounded-full">
+                    {{ genre }}
+                </span>
+                {% endfor %}
+            </div>
+            <p class="text-gray-300 text-sm max-w-2xl">
+                {{ highlighted_film.plot }}
+            </p>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Reviews Section -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-6 text-[#dc2626] border-b border-[#252525] pb-2">User Reviews</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for review in user_reviews %}
+            <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#252525]">
+                <div class="flex items-start mb-3">
+                    <a href="{{ url_for('user_profile', username=review.user.username) }}" class="flex-shrink-0">
+                        <img src="{{ url_for('static', filename='images/' ~ review.user.profile_pic) if review.user.profile_pic else url_for('static', filename='images/default.jpg') }}"
+                             class="w-10 h-10 rounded-full border border-[#dc2626] mr-3">
+                    </a>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <a href="{{ url_for('user_profile', username=review.user.username) }}" class="font-bold hover:underline">{{ review.user.username }}</a>
+<div class="inline-flex items-center bg-[#dc2626] text-white px-2 py-[2px] rounded space-x-1 mt-1">
+    <span class="text-xs font-semibold">{{ review.rating }}</span>
+    <div class="flex items-center space-x-[1px]">
+        {% set full_popcorns = (review.rating // 1)|int %}
+        {% set empty_popcorns = 10 - full_popcorns %}
+        {% for i in range(full_popcorns) %}
+        <img src="{{ url_for('static', filename='images/popcorn_full.png') }}" alt="popcorn"
+             class="w-4 h-4 sm:w-5 sm:h-5">
+        {% endfor %}
+        {% for i in range(empty_popcorns) %}
+        <img src="{{ url_for('static', filename='images/popcorn_empty.png') }}" alt="empty"
+             class="w-4 h-4 sm:w-5 sm:h-5 opacity-30">
+        {% endfor %}
+    </div>
+</div>
+                            </div>
+                            {% if current_user and current_user._id != review.user._id %}
+                            <button class="follow-btn text-xs bg-[#252525] text-white px-3 py-1 rounded-full hover:bg-[#dc2626] transition"
+                                    data-user-id="{{ review.user._id }}">
+                                {% if review.is_following %}Unfollow{% else %}+ Follow{% endif %}
+                            </button>
+                            {% endif %}
+                        </div>
+                        <p class="text-sm text-gray-200 mt-2">"{{ review.text | truncate(180) }}"</p>
+                        <div class="flex justify-between mt-3">
+                            <div class="flex space-x-4">
+                                <button class="like-btn text-sm flex items-center space-x-1 hover:text-[#dc2626] transition"
+                                        data-review-id="{{ review._id }}">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span>{{ review.likes }}</span>
+                                </button>
+                                <button class="dislike-btn text-sm flex items-center space-x-1 hover:text-[#dc2626] transition"
+                                        data-review-id="{{ review._id }}">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    <span>{{ review.dislikes }}</span>
+                                </button>
+                            </div>
+                            <button class="report-btn text-xs text-gray-400 hover:text-[#dc2626] transition"
+                                    data-review-id="{{ review._id }}">
+                                <i class="fas fa-flag"></i> Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Watchlist Section -->
+<!-- Watchlist Section -->
+<section>
+    <h2 class="text-2xl font-bold mb-6 text-[#dc2626] border-b border-[#252525] pb-2">Your Watchlists</h2>
+    <div class="space-y-8">
+        {% for wl in current_user.custom_watchlists or [] %}
+        <div>
+            <h3 class="text-lg font-semibold mb-3 text-gray-300">{{ wl.name }}</h3>
+            <div class="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
+                {% for film in wl.films %}
+                <div class="flex-shrink-0 w-28">
+                    <img src="{{ film.poster_url or url_for('static', filename='images/default.jpg') }}"
+                         alt="{{ film.title }}"
+                         class="w-full h-40 object-cover rounded-lg shadow hover:opacity-80 transition">
+                    <p class="text-xs mt-2 text-gray-300 text-center truncate">{{ film.title }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+
+</div>
+
+<!-- Script -->
+<script>
+document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        const reviewId = btn.dataset.reviewId;
+
+        try {
+            const response = await fetch(`/review/${reviewId}/like`, { method: 'POST' });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to like.');
+                btn.innerHTML = originalHTML;
+            }
+        } catch (err) {
+            alert('Network error.');
+            btn.innerHTML = originalHTML;
+        }
+    });
+});
+
+document.querySelectorAll('.dislike-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        const reviewId = btn.dataset.reviewId;
+
+        try {
+            const response = await fetch(`/review/${reviewId}/dislike`, { method: 'POST' });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to dislike.');
+                btn.innerHTML = originalHTML;
+            }
+        } catch (err) {
+            alert('Network error.');
+            btn.innerHTML = originalHTML;
+        }
+    });
+});
+
+document.querySelectorAll('.report-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        const reviewId = btn.dataset.reviewId;
+        const formData = new FormData();
+        formData.append('reason', 'Contains spoiler');
+
+        try {
+            const response = await fetch(`/review/${reviewId}/report`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                alert('Reported successfully!');
+            } else {
+                alert(data.message || 'Failed to report.');
+            }
+        } catch (err) {
+            alert('Network error.');
+        } finally {
+            btn.innerHTML = originalHTML;
+        }
+    });
+});
+</script>
+
+<style>
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>
+{% endblock %}

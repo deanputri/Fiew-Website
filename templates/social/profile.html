@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Profile Header -->
+    <div class="flex flex-col md:flex-row gap-8 mb-8">
+        <!-- Profile Picture -->
+        <div class="w-full md:w-1/4 lg:w-1/5 flex justify-center">
+            <div class="relative">
+                {% if user.profile_pic %}
+                <img src="{{ url_for('static', filename='images/' + user.profile_pic) }}" 
+                     alt="{{ user.username }}" class="w-48 h-48 rounded-full object-cover border-4 border-gray-700">
+                {% else %}
+                <div class="w-48 h-48 rounded-full bg-gray-700 flex items-center justify-center border-4 border-gray-700">
+                    <i class="fas fa-user text-6xl text-gray-400"></i>
+                </div>
+                {% endif %}
+                
+                {% if current_user and current_user._id == user._id %}
+                <a href="{{ url_for('edit_profile') }}" 
+                   class="absolute bottom-0 right-0 bg-gray-800 rounded-full p-2 hover:bg-gray-700">
+                    <i class="fas fa-pencil-alt text-sm"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Profile Info -->
+        <div class="w-full md:w-3/4 lg:w-4/5">
+            <div class="flex justify-between items-start mb-4">
+                <h1 class="text-3xl font-bold">{{ user.username }}</h1>
+                
+                {% if current_user and current_user._id != user._id %}
+                <button class="follow-btn px-4 py-2 rounded-lg {% if is_following %}bg-red-600{% else %}bg-gray-700{% endif %} hover:bg-red-700"
+                        data-user-id="{{ user._id }}">
+                    {% if is_following %}Following{% else %}Follow{% endif %}
+                </button>
+                {% endif %}
+            </div>
+            
+            {% if user.bio %}
+            <p class="text-gray-300 mb-6">{{ user.bio }}</p>
+            {% endif %}
+            
+            <!-- Stats -->
+            <div class="flex space-x-8 mb-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold">{{ reviews|length or 0 }}</div>
+
+                    <div class="text-gray-400">Reviews</div>
+                </div>
+                <a href="#followers" class="text-center hover:text-red-500">
+                    <div class="text-2xl font-bold">{{ followers_count }}</div>
+                    <div class="text-gray-400">Followers</div>
+                </a>
+                <a href="#following" class="text-center hover:text-red-500">
+                    <div class="text-2xl font-bold">{{ following_count }}</div>
+                    <div class="text-gray-400">Following</div>
+                </a>
+            </div>
+            
+            <!-- Edit Profile Button (for own profile) -->
+            {% if current_user and current_user._id == user._id %}
+<a href="{{ url_for('edit_profile') }}" 
+   class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+    Edit Profile
+</a>
+
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- User Reviews -->
+    <div class="mt-12">
+        <h2 class="text-2xl font-bold mb-6">Recent Reviews</h2>
+        
+        {% if reviews|length > 0 %}
+
+        <div class="space-y-6">
+            {% for review in reviews %}
+            <div class="bg-gray-800 rounded-lg p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <a href="{{ url_for('film_detail', film_id=review.film_id._id) }}">
+                            <img src="{{ review.film_id.poster_url or 'https://via.placeholder.com/100x150' }}" 
+                                 class="w-16 h-24 object-cover rounded" alt="{{ review.film_id.title }}">
+                        </a>
+                        <div>
+                            <a href="{{ url_for('film_detail', film_id=review.film_id._id) }}" 
+                               class="font-semibold hover:text-red-500">
+                                {{ review.film_id.title }} ({{ review.film_id.release_date.year }})
+                            </a>
+                            <div class="text-sm text-gray-400">
+                                <span>{{ review.created_at.strftime('%B %d, %Y') }}</span>
+                                {% if review.is_spoiler %}
+                                <span class="ml-2 bg-red-600 text-white px-2 py-0.5 rounded text-xs">SPOILER</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="rating-circle {% if review.rating >= 3.5 %}fresh{% else %}rotten{% endif %}">
+                            {{ review.rating }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-gray-300">{{ review.text }}</p>
+                </div>
+                
+                <div class="flex justify-between items-center">
+                    <div class="flex space-x-4">
+                        <button class="like-btn flex items-center space-x-1 text-gray-400 hover:text-white" data-review-id="{{ review._id }}">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span class="like-count">{{ review.likes }}</span>
+                        </button>
+                        <button class="dislike-btn flex items-center space-x-1 text-gray-400 hover:text-white" data-review-id="{{ review._id }}">
+                            <i class="fas fa-thumbs-down"></i>
+                            <span class="dislike-count">{{ review.dislikes }}</span>
+                        </button>
+                    </div>
+                    
+                    {% if current_user and current_user._id != user._id %}
+                    <button class="report-btn text-gray-400 hover:text-red-500 text-sm" data-review-id="{{ review._id }}">
+                        <i class="fas fa-flag mr-1"></i> Report
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-gray-800 rounded-lg p-8 text-center">
+            <p class="text-gray-400">
+                {% if current_user and current_user._id == user._id %}
+                You haven't reviewed any films yet. <a href="{{ url_for('search_films') }}" class="text-red-500 hover:underline">Find a film</a> to review!
+                {% else %}
+                {{ user.username }} hasn't reviewed any films yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Followers/Following Sections -->
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Followers -->
+        <div id="followers">
+            <h2 class="text-2xl font-bold mb-6">Followers ({{ followers_count }})</h2>
+            {% if followers_count > 0 %}
+            <div class="bg-gray-800 rounded-lg p-6">
+                <div class="space-y-4">
+                    {% for follow in follows.find({'following_id': user._id}).limit(5) %}
+                    {% set follower = users.find_one({'_id': follow.follower_id}) %}
+                    <div class="flex items-center justify-between">
+                        <a href="{{ url_for('user_profile', username=follower.username) }}" class="flex items-center space-x-3 hover:text-red-500">
+                            {% if follower.profile_pic %}
+                            <img src="{{ url_for('static', filename='images/' + follower.profile_pic) }}" 
+                                 class="w-10 h-10 rounded-full" alt="{{ follower.username }}">
+                            {% else %}
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                            <span>{{ follower.username }}</span>
+                        </a>
+                        
+                        {% if current_user and current_user._id != follower._id %}
+                        {% set is_following_follower = follows.find_one({
+                            'follower_id': current_user._id,
+                            'following_id': follower._id
+                        }) %}
+                        <button class="follow-btn px-3 py-1 rounded text-sm {% if is_following_follower %}bg-red-600{% else %}bg-gray-700{% endif %} hover:bg-red-700"
+                                data-user-id="{{ follower._id }}">
+                            {% if is_following_follower %}Following{% else %}Follow{% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    {% if followers_count > 5 %}
+                    <a href="#" class="inline-block text-red-500 hover:underline mt-4">
+                        View all {{ followers_count }} followers
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-gray-800 rounded-lg p-8 text-center">
+                <p class="text-gray-400">
+                    {% if current_user and current_user._id == user._id %}
+                    You don't have any followers yet.
+                    {% else %}
+                    {{ user.username }} doesn't have any followers yet.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Following -->
+        <div id="following">
+            <h2 class="text-2xl font-bold mb-6">Following ({{ following_count }})</h2>
+            {% if following_count > 0 %}
+            <div class="bg-gray-800 rounded-lg p-6">
+                <div class="space-y-4">
+                    {% for follow in follows.find({'follower_id': user._id}).limit(5) %}
+                    {% set following = users.find_one({'_id': follow.following_id}) %}
+                    <div class="flex items-center justify-between">
+                        <a href="{{ url_for('user_profile', username=following.username) }}" class="flex items-center space-x-3 hover:text-red-500">
+                            {% if following.profile_pic %}
+                            <img src="{{ url_for('static', filename='images/' + following.profile_pic) }}" 
+                                 class="w-10 h-10 rounded-full" alt="{{ following.username }}">
+                            {% else %}
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                            <span>{{ following.username }}</span>
+                        </a>
+                        
+                        {% if current_user and current_user._id != following._id %}
+                        {% set is_following_following = follows.find_one({
+                            'follower_id': current_user._id,
+                            'following_id': following._id
+                        }) %}
+                        <button class="follow-btn px-3 py-1 rounded text-sm {% if is_following_following %}bg-red-600{% else %}bg-gray-700{% endif %} hover:bg-red-700"
+                                data-user-id="{{ following._id }}">
+                            {% if is_following_following %}Following{% else %}Follow{% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    {% if following_count > 5 %}
+                    <a href="#" class="inline-block text-red-500 hover:underline mt-4">
+                        View all {{ following_count }} following
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-gray-800 rounded-lg p-8 text-center">
+                <p class="text-gray-400">
+                    {% if current_user and current_user._id == user._id %}
+                    You're not following anyone yet.
+                    {% else %}
+                    {{ user.username }} isn't following anyone yet.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
